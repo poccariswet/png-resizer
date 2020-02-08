@@ -29,7 +29,7 @@ fn resize(path: &str, target_size: usize) -> Result<(Vec<u8>, usize, usize), Str
             FilterType::Lanczos3,
         );
 
-        let mut output = File::create(format!("output/sample-{}.png", target_size)).unwrap();
+        let mut output = File::create(format!("output/{}-{}.png", path, target_size)).unwrap();
         resized_img.write_to(&mut output, ImageFormat::Png).unwrap();
 
         Ok((
