@@ -13,43 +13,21 @@ fn resize(path: &str, target_size: usize) -> Result<image::DynamicImage, String>
     let width = img.width() as usize;
     let height = img.height() as usize;
 
-    // scale down
-    if width > target_size || height > target_size {
-        let (target_width, target_height) = if width > height {
-            let ratio: f32 = target_size as f32 / width as f32;
-            (target_size, (height as f32 * ratio) as usize)
-        } else {
-            let ratio: f32 = target_size as f32 / height as f32;
-            ((width as f32 * ratio) as usize, target_size)
-        };
-
-        let resized_img = img.resize(
-            target_width as u32,
-            target_height as u32,
-            FilterType::Lanczos3,
-        );
-
-        Ok(resized_img)
-
-    // scale up
+    let (target_width, target_height) = if width > height {
+        let ratio: f32 = target_size as f32 / width as f32;
+        (target_size, (height as f32 * ratio) as usize)
     } else {
-        //let (target_width, target_height) = if width > height {
-        //    let ratio: f32 = target_size as f32 / width as f32;
-        //    (target_size, (height as f32 * ratio) as usize)
-        //} else {
-        //    let ratio: f32 = target_size as f32 / height as f32;
-        //    ((width as f32 * ratio) as usize, target_size)
-        //};
+        let ratio: f32 = target_size as f32 / height as f32;
+        ((width as f32 * ratio) as usize, target_size)
+    };
 
-        //let resized_img = img.resize(
-        //    target_width as u32,
-        //    target_height as u32,
-        //    FilterType::Lanczos3,
-        //);
+    let resized_img = img.resize(
+        target_width as u32,
+        target_height as u32,
+        FilterType::Lanczos3,
+    );
 
-        //Ok(resized_img)
-        Ok(img)
-    }
+    Ok(resized_img)
 }
 
 fn main() {
