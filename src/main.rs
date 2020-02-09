@@ -5,12 +5,11 @@ use image::imageops::FilterType;
 use image::ImageFormat;
 use image::{self, GenericImageView};
 use std::fs::File;
+use std::path::Path;
 
-//const TARGET_SIZE: usize = 250;
-
-fn resize(path: &str, target_size: usize) -> Result<(Vec<u8>, usize, usize), String> {
-    //fn resize(path: &str, target_size: usize) -> Result<(Vec<u8>, usize, usize), String> {
+fn resize(path: &str, target_size: usize) -> Result<image::DynamicImage, String> {
     let img = image::open(path).unwrap();
+
     let width = img.width() as usize;
     let height = img.height() as usize;
 
@@ -29,16 +28,9 @@ fn resize(path: &str, target_size: usize) -> Result<(Vec<u8>, usize, usize), Str
             FilterType::Lanczos3,
         );
 
-        let mut output = File::create(format!("output/{}-{}.png", path, target_size)).unwrap();
-        resized_img.write_to(&mut output, ImageFormat::Png).unwrap();
-
-        Ok((
-            resized_img.to_rgb().to_vec(),
-            resized_img.width() as usize,
-            resized_img.height() as usize,
-        ))
+        Ok(resized_img)
     } else {
-        Ok((img.to_rgb().to_vec(), width, height))
+        Ok(img)
     }
 }
 
@@ -89,9 +81,18 @@ fn main() {
     println!("{}", target_size);
 
     if let Some(in_files) = matches.values_of("input") {
-        for file in in_files {
-            println!("An input file: {}", file);
-            resize(file, target_size).unwrap();
+        for path in in_files {
+            let resized_img = resize(path, target_size).unwrap();
+
+            let path = Path::new(path);
+            let mut output = File::create(format!(
+                "output/{}-{}.png",
+                path.file_stem().unwrap().to_str().unwrap(),
+                target_size
+            ))
+            .unwrap();
+
+            resized_img.write_to(&mut output, ImageFormat::Png).unwrap();
         }
     }
 
