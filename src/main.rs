@@ -1,15 +1,14 @@
 extern crate clap;
+extern crate image;
 use clap::{App, Arg};
 
+use image::error::ImageResult;
 use image::imageops::FilterType;
-use image::ImageFormat;
-use image::{self, GenericImageView};
+use image::{DynamicImage, GenericImageView, ImageFormat};
 use std::fs::File;
 use std::path::Path;
 
-fn resize(path: &str, target_size: usize) -> Result<image::DynamicImage, String> {
-    let img = image::open(path).unwrap();
-
+pub fn resize_with_target(img: DynamicImage, target_size: usize) -> Result<DynamicImage, String> {
     let width = img.width() as usize;
     let height = img.height() as usize;
 
@@ -30,6 +29,31 @@ fn resize(path: &str, target_size: usize) -> Result<image::DynamicImage, String>
     Ok(resized_img)
 }
 
+struct Config {
+    file_path: String,
+    img: DynamicImage,
+}
+
+impl Config {
+    pub fn new(file_path: &str, img: DynamicImage) -> Config {
+        Config {
+            file_path: file_path.to_string(),
+            img: img,
+        }
+    }
+
+    pub fn write_to_path(self, format: ImageFormat) -> ImageResult<()> {
+        let path = Path::new(&self.file_path);
+        let mut output = File::create(format!(
+            "output/resizd-{}.png",
+            path.file_stem().unwrap().to_str().unwrap(),
+        ))
+        .unwrap();
+
+        self.img.write_to(&mut output, format)
+    }
+}
+
 fn main() {
     let matches = App::new("png-resizer")
         .version("1.0")
@@ -41,8 +65,7 @@ fn main() {
                 .long("target-size")
                 .value_name("NUM")
                 .help("Sets a target size value")
-                .takes_value(true)
-                .required(true),
+                .takes_value(true),
         )
         .arg(
             Arg::with_name("width")
@@ -70,33 +93,45 @@ fn main() {
         )
         .get_matches();
 
-    let mut target_size: usize = 0;
-    if let Some(target) = matches.value_of("target-size") {
-        target_size = target.parse::<usize>().unwrap();
+    if let Some(w) = matches.value_of("width") {
+        println!("Value for width: {}", w);
     }
-    println!("{}", target_size);
 
-    if let Some(in_files) = matches.values_of("input") {
-        for path in in_files {
-            let resized_img = resize(path, target_size).unwrap();
+    if let Some(h) = matches.value_of("height") {
+        println!("Value for height: {}", h);
+    }
 
-            let path = Path::new(path);
-            let mut output = File::create(format!(
-                "output/{}-{}.png",
-                path.file_stem().unwrap().to_str().unwrap(),
-                target_size
-            ))
-            .unwrap();
+    // This target-size doesn't override the width and height.
+    let resized_images = if matches.is_present("width") && matches.is_present("height") {
+        let mut resized_imgs = vec![];
+        for path in matches.values_of("input").unwrap() {
+            let img = image::open(path).unwrap();
+            let w = matches.value_of("width").unwrap();
+            let h = matches.value_of("height").unwrap();
 
-            resized_img.write_to(&mut output, ImageFormat::Png).unwrap();
+            let w: u32 = w.parse().unwrap();
+            let h: u32 = h.parse().unwrap();
+
+            let resized_img = img.resize(w, h, FilterType::Lanczos3);
+            resized_imgs.push(Config::new(path, resized_img));
         }
-    }
+        resized_imgs
+    } else if matches.is_present("target-size") {
+        let mut resized_imgs = vec![];
+        for path in matches.values_of("input").unwrap() {
+            let img = image::open(path).unwrap();
+            let target_size = matches.value_of("target-size").unwrap();
+            let target_size: usize = target_size.parse().unwrap();
 
-    if let Some(c) = matches.value_of("width") {
-        println!("Value for width: {}", c);
-    }
+            let resized_img = resize_with_target(img, target_size).unwrap();
+            resized_imgs.push(Config::new(path, resized_img));
+        }
+        resized_imgs
+    } else {
+        vec![]
+    };
 
-    if let Some(c) = matches.value_of("height") {
-        println!("Value for height: {}", c);
+    for img in resized_images {
+        img.write_to_path(ImageFormat::Png).unwrap();
     }
 }
