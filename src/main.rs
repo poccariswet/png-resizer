@@ -45,7 +45,7 @@ impl Config {
     pub fn write_to_path(self, format: ImageFormat) -> ImageResult<()> {
         let path = Path::new(&self.file_path);
         let mut output = File::create(format!(
-            "output/resizd-{}.png",
+            "resized-{}.png",
             path.file_stem().unwrap().to_str().unwrap(),
         ))
         .unwrap();
