@@ -78,7 +78,7 @@ fn main() {
         .arg(
             Arg::with_name("height")
                 .short("h")
-                .long("hegiht")
+                .long("height")
                 .value_name("NUM")
                 .help("Sets a height value")
                 .takes_value(true),
