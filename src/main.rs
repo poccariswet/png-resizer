@@ -93,14 +93,6 @@ fn main() {
         )
         .get_matches();
 
-    if let Some(w) = matches.value_of("width") {
-        println!("Value for width: {}", w);
-    }
-
-    if let Some(h) = matches.value_of("height") {
-        println!("Value for height: {}", h);
-    }
-
     // This target-size doesn't override the width and height.
     let resized_images = if matches.is_present("width") && matches.is_present("height") {
         let mut resized_imgs = vec![];
