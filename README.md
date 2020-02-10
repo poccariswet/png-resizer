@@ -1,7 +1,7 @@
 # png-resizer
 
 this project provide image resize command line interface.  
-clap is the best Command Line Argument Parser for Rust.
+[clap](https://github.com/clap-rs/clap) is the best Command Line Argument Parser for Rust.
 
 ## Usage
 
