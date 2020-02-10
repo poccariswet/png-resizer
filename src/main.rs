@@ -50,6 +50,7 @@ impl Config {
         ))
         .unwrap();
 
+        println!("w: {}, h: {}", self.img.width(), self.img.height());
         self.img.write_to(&mut output, format)
     }
 }
@@ -104,7 +105,7 @@ fn main() {
             let w: u32 = w.parse().unwrap();
             let h: u32 = h.parse().unwrap();
 
-            let resized_img = img.resize(w, h, FilterType::Lanczos3);
+            let resized_img = img.resize_exact(w, h, FilterType::Lanczos3);
             resized_imgs.push(Config::new(path, resized_img));
         }
         resized_imgs
